@@ -1,0 +1,10 @@
+node_modules
+npm-debug.log
+yarn-error.log
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.dockerignore
+Dockerfile
+docker-compose.yml
