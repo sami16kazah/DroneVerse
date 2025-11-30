@@ -38,3 +38,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 =======
 # DroneVerse
 >>>>>>> cdef7e81817b7612f420b415613ca604a731d8ef
+
+1- change the color of the polygon to gray and organg the edges are orange with high opacity easy to spot the original 
+2- add the crack level as sqares fill with red depending on the value put it outside the polygon near any edge 
+3- the image adjusment setting only must affect the picture you are trying to examin 
