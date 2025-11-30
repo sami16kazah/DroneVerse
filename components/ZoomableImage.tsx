@@ -15,6 +15,7 @@ export interface Annotation {
   type: "square" | "polygon";
   points: number[][]; // [[x, y], ...] in percentages
   color: string;
+  crackLevel?: number;
 }
 
 interface ZoomableImageProps {
@@ -48,6 +49,10 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   );
   const [currentPoints, setCurrentPoints] = useState<number[][]>([]);
   const [tempSquareStart, setTempSquareStart] = useState<number[] | null>(null);
+
+  // Crack Level State
+  const [showCrackLevelInput, setShowCrackLevelInput] = useState(false);
+  const [crackLevel, setCrackLevel] = useState<number>(1);
 
   // Helper to generate Cloudinary URL
   const getCloudinaryUrl = (pid: string, transformations: string) => {
@@ -147,16 +152,23 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
 
   const confirmShape = () => {
     if (currentPoints.length < 2) return;
+    setShowCrackLevelInput(true);
+  };
+
+  const finalizeShape = () => {
     if (onSaveAnnotation && drawingMode) {
       onSaveAnnotation({
         type: drawingMode,
         points: currentPoints,
         color: "rgba(255, 0, 0, 0.5)",
+        crackLevel: crackLevel,
       });
     }
     setDrawingMode(null);
     setCurrentPoints([]);
     setTempSquareStart(null);
+    setShowCrackLevelInput(false);
+    setCrackLevel(1);
   };
 
   const discardShape = () => {
@@ -334,6 +346,49 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
           </>
       )}
       </TransformWrapper>
+
+      {/* Crack Level Input Modal */}
+      {showCrackLevelInput && (
+        <div className="absolute inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-xl border border-gray-700 w-64">
+            <h3 className="text-lg font-semibold text-white mb-4">Crack Level</h3>
+            <div className="flex flex-col gap-4">
+              <div>
+                <label className="text-sm text-gray-400 mb-1 block">Severity (1-5)</label>
+                <div className="flex justify-between gap-1">
+                  {[1, 2, 3, 4, 5].map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => setCrackLevel(level)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+                        crackLevel === level
+                          ? "bg-red-500 text-white scale-110"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={finalizeShape}
+                  className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded transition-colors"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setShowCrackLevelInput(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2 rounded transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

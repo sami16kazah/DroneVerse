@@ -13,6 +13,7 @@ const Page = () => {
     blade?: string;
     side?: string;
     thumbnails?: { url: string; publicId: string; side: string }[];
+    clientName?: string;
   }>({
     url: "/turbine-high.png",
     publicId: "",
@@ -51,6 +52,7 @@ const Page = () => {
     blade: string;
     side: string;
     thumbnails: { url: string; publicId: string; side: string }[];
+    clientName?: string;
   }) => {
     setSelectedImage(data);
     setIsSidebarOpen(false); // Close sidebar on mobile when image selected
@@ -141,7 +143,7 @@ const Page = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          clientName: "Client Report", // Could be dynamic
+          clientName: selectedImage.clientName || "Client Report",
           damages: damageList,
         }),
       });
@@ -181,22 +183,7 @@ const Page = () => {
 
       {/* Main Content - Image Viewer */}
       <div className="flex-1 flex flex-col relative bg-black order-1 lg:order-1 h-1/2 lg:h-full">
-        {/* Generate Report Button */}
-        <div className="absolute top-4 right-4 z-50">
-             <button
-                onClick={generateReport}
-                disabled={isGeneratingReport || Object.keys(damages).length === 0}
-                className={`
-                    flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all
-                    ${Object.keys(damages).length > 0 
-                        ? "bg-blue-600 hover:bg-blue-500 text-white" 
-                        : "bg-gray-700 text-gray-400 cursor-not-allowed"}
-                `}
-             >
-                <FaFilePdf />
-                {isGeneratingReport ? "Saving..." : `Generate Report (${Object.keys(damages).length})`}
-             </button>
-        </div>
+
 
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
           <ZoomableImage
@@ -263,6 +250,9 @@ const Page = () => {
           grayscale={filters.grayscale}
           hueRotate={filters.hueRotate}
           onChange={handleFilterChange}
+          onGenerateReport={generateReport}
+          isGeneratingReport={isGeneratingReport}
+          damageCount={Object.keys(damages).length}
         />
       </div>
     </div>
