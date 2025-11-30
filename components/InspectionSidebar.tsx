@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList, FaTrash } from "react-icons/fa";
 
 interface IInspection {
   _id: string;
@@ -80,6 +80,50 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
 
   const toggleExpand = (id: string, setExpandState: React.Dispatch<React.SetStateAction<Record<string, boolean>>>) => {
     setExpandState((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const handleDeleteInspection = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log("handleDeleteInspection called for ID:", id);
+    if (!confirm("Are you sure you want to delete this inspection? This will delete all associated images.")) return;
+
+    try {
+      console.log("Sending DELETE request to /api/inspection");
+      const res = await fetch(`/api/inspection?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      console.log("Delete response:", data);
+      if (data.success) {
+        setInspections((prev) => prev.filter((i) => i._id !== id));
+        console.log("Inspection removed from state");
+      } else {
+        alert("Failed to delete inspection: " + data.error);
+      }
+    } catch (err) {
+      console.error("Frontend Delete Error:", err);
+      alert("An error occurred while deleting.");
+    }
+  };
+
+  const handleDeleteReport = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log("handleDeleteReport called for ID:", id);
+    if (!confirm("Are you sure you want to delete this report? This will delete all associated images.")) return;
+
+    try {
+      console.log("Sending DELETE request to /api/report");
+      const res = await fetch(`/api/report?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      console.log("Delete response:", data);
+      if (data.success) {
+        setReports((prev) => prev.filter((r) => r._id !== id));
+        console.log("Report removed from state");
+      } else {
+        alert("Failed to delete report: " + data.error);
+      }
+    } catch (err) {
+      console.error("Frontend Delete Error:", err);
+      alert("An error occurred while deleting.");
+    }
   };
 
   // Auto-expand logic for Inspections (existing)
@@ -167,9 +211,16 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                 >
                   {expanded[inspection._id] ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
                   <span className="font-semibold text-sm">{inspection.clientName}</span>
-                  <span className="text-xs text-gray-400 ml-auto">
+                  <span className="text-xs text-gray-400 ml-auto mr-2">
                     {new Date(inspection.createdAt).toLocaleDateString()}
                   </span>
+                  <div
+                    onClick={(e) => handleDeleteInspection(inspection._id, e)}
+                    className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-colors"
+                    title="Delete Inspection"
+                  >
+                    <FaTrash size={12} />
+                  </div>
                 </button>
 
                 {expanded[inspection._id] && (
@@ -248,9 +299,16 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                 >
                   {expandedReports[report._id] ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
                   <span className="font-semibold text-sm">{report.clientName} Report</span>
-                  <span className="text-xs text-gray-400 ml-auto">
+                  <span className="text-xs text-gray-400 ml-auto mr-2">
                     {new Date(report.createdAt).toLocaleDateString()}
                   </span>
+                  <div
+                    onClick={(e) => handleDeleteReport(report._id, e)}
+                    className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-colors"
+                    title="Delete Report"
+                  >
+                    <FaTrash size={12} />
+                  </div>
                 </button>
 
                 {expandedReports[report._id] && (
