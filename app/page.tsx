@@ -15,6 +15,7 @@ const Page = () => {
     side?: string;
     thumbnails?: { url: string; publicId: string; side: string }[];
     clientName?: string;
+    isReportView?: boolean;
   }>({
     url: "/turbine-high.png",
     publicId: "",
@@ -70,6 +71,7 @@ const Page = () => {
     side: string;
     thumbnails: { url: string; publicId: string; side: string }[];
     clientName?: string;
+    isReportView?: boolean;
   }) => {
     setSelectedImage(data);
     setIsSidebarOpen(false); // Close sidebar on mobile when image selected
@@ -258,6 +260,7 @@ const Page = () => {
             filters={filterString}
             annotations={damages[selectedImage.publicId]?.annotations || []}
             onSaveAnnotation={handleSaveAnnotationWithMeta}
+            readOnly={selectedImage.isReportView}
           />
         </div>
 
@@ -317,6 +320,7 @@ const Page = () => {
           onGenerateReport={generateReport}
           isGeneratingReport={isGeneratingReport}
           damageCount={Object.keys(damages).length}
+          isReportView={selectedImage.isReportView}
         />
       </div>
     </div>

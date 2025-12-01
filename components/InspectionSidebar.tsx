@@ -44,6 +44,7 @@ interface InspectionSidebarProps {
     annotations?: any[];
     clientName?: string;
     filters?: any;
+    isReportView?: boolean;
   }) => void;
 }
 
@@ -164,6 +165,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
           thumbnails: allThumbnails,
           annotations: [], // Inspections don't have annotations directly on images
           clientName: clientName,
+          isReportView: false,
         });
       }
     }
@@ -266,6 +268,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                                               thumbnails: allThumbnails,
                                               annotations: [], // Inspections don't have annotations directly on images
                                               clientName: inspection.clientName,
+                                              isReportView: false,
                                             });
                                           }}
                                           className="w-full flex items-center gap-2 p-1.5 hover:bg-blue-900/30 hover:text-blue-400 rounded text-xs text-gray-400 transition-colors"
@@ -352,6 +355,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                                         side: damage.side,
                                         thumbnails: [],
                                         annotations: damage.annotations,
+                                        isReportView: true,
                                       })}
                                       className="w-full flex items-start gap-3 p-2 hover:bg-gray-700 rounded transition-colors"
                                     >

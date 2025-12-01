@@ -26,6 +26,7 @@ interface ZoomableImageProps {
   filters: string;
   annotations?: Annotation[];
   onSaveAnnotation?: (annotation: Annotation) => void;
+  readOnly?: boolean;
 }
 
 const ZoomableImage: React.FC<ZoomableImageProps> = ({
@@ -36,6 +37,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   filters,
   annotations = [],
   onSaveAnnotation,
+  readOnly = false,
 }) => {
   const [currentSrc, setCurrentSrc] = useState(lowResSrc);
   const [isHighResLoaded, setIsHighResLoaded] = useState(false);
@@ -307,6 +309,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
               </div>
 
               {/* Drawing Tools */}
+              {!readOnly && (
               <div className="flex gap-2 bg-gray-800/80 p-2 rounded-full backdrop-blur-sm mt-2 justify-center">
                 {!drawingMode ? (
                   <>
@@ -344,6 +347,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                   </>
                 )}
               </div>
+              )}
             </div>
 
             <TransformComponent
@@ -366,9 +370,9 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                   className="absolute inset-0 w-full h-full pointer-events-auto"
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
-                  onClick={handleSvgClick}
-                  onMouseMove={handleMouseMove}
-                  style={{ cursor: drawingMode ? "crosshair" : "default" }}
+                  onClick={!readOnly ? handleSvgClick : undefined}
+                  onMouseMove={!readOnly ? handleMouseMove : undefined}
+                  style={{ cursor: drawingMode ? "crosshair" : "default", pointerEvents: readOnly ? "none" : "auto" }}
                 >
                   {/* Existing Annotations */}
                   {annotations.map((ann, i) =>
