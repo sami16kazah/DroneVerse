@@ -1,6 +1,8 @@
 // components/ImageEditingNav.tsx
 import React, { useState } from "react";
 
+import { generatePDF, IReport } from "../utils/pdfGenerator";
+
 interface ImageEditingNavProps {
   brightness: number;
   blur: number;
@@ -16,6 +18,7 @@ interface ImageEditingNavProps {
   isGeneratingReport?: boolean;
   damageCount?: number;
   isReportView?: boolean;
+  report?: IReport;
 }
 
 const ImageEditingNav: React.FC<ImageEditingNavProps> = ({
@@ -30,6 +33,7 @@ const ImageEditingNav: React.FC<ImageEditingNavProps> = ({
   isGeneratingReport,
   damageCount,
   isReportView = false,
+  report,
 }) => {
   const [openSection, setOpenSection] = useState<string | null>("basic");
 
@@ -78,9 +82,9 @@ const ImageEditingNav: React.FC<ImageEditingNavProps> = ({
       )}
       
       {/* Download Report Button (Report View) */}
-      {isReportView && (
+      {isReportView && report && (
         <button
-          onClick={() => window.print()}
+          onClick={() => generatePDF(report)}
           className="w-full py-3 rounded-lg font-bold text-white shadow-lg transition-all mb-6 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-500"
         >
           <svg

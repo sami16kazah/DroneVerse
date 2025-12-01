@@ -7,6 +7,8 @@ import { captureImageWithAnnotations } from "../utils/imageCapture";
 import Modal from "../components/Modal";
 import { FaBars, FaTimes, FaFilePdf } from "react-icons/fa";
 
+import { IReport } from "../utils/pdfGenerator";
+
 const Page = () => {
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
@@ -17,6 +19,7 @@ const Page = () => {
     thumbnails?: { url: string; publicId: string; side: string }[];
     clientName?: string;
     isReportView?: boolean;
+    report?: IReport;
   }>({
     url: "/turbine-high.png",
     publicId: "",
@@ -84,6 +87,7 @@ const Page = () => {
     thumbnails: { url: string; publicId: string; side: string }[];
     clientName?: string;
     isReportView?: boolean;
+    report?: IReport;
   }) => {
     setSelectedImage(data);
     setIsSidebarOpen(false); // Close sidebar on mobile when image selected
@@ -299,6 +303,7 @@ const Page = () => {
           isGeneratingReport={isGeneratingReport}
           damageCount={Object.keys(damages).length}
           isReportView={selectedImage.isReportView}
+          report={selectedImage.report}
         />
       </div>
 

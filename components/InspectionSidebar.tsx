@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList, FaTrash } from "react-icons/fa";
+import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList, FaTrash, FaDownload } from "react-icons/fa";
 import Modal from "./Modal";
+import { generatePDF, IReport } from "../utils/pdfGenerator";
 
 interface IInspection {
   _id: string;
@@ -19,21 +20,6 @@ interface IInspection {
   }[];
 }
 
-interface IReport {
-  _id: string;
-  clientName: string;
-  createdAt: string;
-  damages: {
-    turbine: string;
-    blade: string;
-    side: string;
-    imageUrl: string;
-    imagePublicId: string;
-    annotations: any[];
-    filters?: any;
-  }[];
-}
-
 interface InspectionSidebarProps {
   onSelectImage: (data: {
     url: string;
@@ -46,6 +32,7 @@ interface InspectionSidebarProps {
     clientName?: string;
     filters?: any;
     isReportView?: boolean;
+    report?: IReport;
   }) => void;
 }
 
@@ -330,12 +317,24 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                   <span className="text-xs text-gray-400 ml-auto mr-2">
                     {new Date(report.createdAt).toLocaleDateString()}
                   </span>
-                  <div
-                    onClick={(e) => handleDeleteReport(report._id, e)}
-                    className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-colors"
-                    title="Delete Report"
-                  >
-                    <FaTrash size={12} />
+                  <div className="flex gap-1">
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        generatePDF(report);
+                      }}
+                      className="p-1.5 hover:bg-green-500/20 text-gray-400 hover:text-green-400 rounded transition-colors"
+                      title="Download PDF"
+                    >
+                      <FaDownload size={12} />
+                    </div>
+                    <div
+                      onClick={(e) => handleDeleteReport(report._id, e)}
+                      className="p-1.5 hover:bg-red-500/20 text-gray-400 hover:text-red-400 rounded transition-colors"
+                      title="Delete Report"
+                    >
+                      <FaTrash size={12} />
+                    </div>
                   </div>
                 </button>
 
@@ -381,6 +380,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                                         thumbnails: [],
                                         annotations: damage.annotations,
                                         isReportView: true,
+                                        report: report,
                                       })}
                                       className="w-full flex items-start gap-3 p-2 hover:bg-gray-700 rounded transition-colors"
                                     >
