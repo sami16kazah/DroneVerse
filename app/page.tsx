@@ -4,6 +4,7 @@ import ImageEditingNav from "../components/ImageEditingNav";
 import ZoomableImage, { Annotation } from "../components/ZoomableImage";
 import InspectionSidebar from "../components/InspectionSidebar";
 import { captureImageWithAnnotations } from "../utils/imageCapture";
+import Modal from "../components/Modal";
 import { FaBars, FaTimes, FaFilePdf } from "react-icons/fa";
 
 const Page = () => {
@@ -22,12 +23,23 @@ const Page = () => {
   });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Annotation State: Keyed by publicId
-  const [annotations, setAnnotations] = useState<Record<string, Annotation[]>>(
-    {}
-  );
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<{ title: string; message: string }>({
+    title: "",
+    message: "",
+  });
+
+  const showModal = (title: string, message: string) => {
+    setModalContent({ title, message });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
 
   const defaultFilters = {
     brightness: 100,
@@ -77,40 +89,6 @@ const Page = () => {
     setIsSidebarOpen(false); // Close sidebar on mobile when image selected
   };
 
-  const handleSaveAnnotation = (annotation: Annotation) => {
-    if (!selectedImage.publicId) return;
-    setAnnotations((prev) => ({
-      ...prev,
-      [selectedImage.publicId]: [
-        ...(prev[selectedImage.publicId] || []),
-        annotation,
-      ],
-    }));
-  };
-
-  const handleGenerateReport = async () => {
-    if (Object.keys(annotations).length === 0) {
-      alert("No annotations to generate report from.");
-      return;
-    }
-    setIsGeneratingReport(true);
-
-    // Construct report payload
-    // We need to reconstruct the damage details. Since we only store annotations by publicId,
-    // we might need to store more metadata or just rely on what we have.
-    // Ideally, we should have stored metadata with annotations.
-    // For now, let's assume we can't easily reconstruct full hierarchy if we visited many images.
-    // Wait, the requirement says "when he press in generate reports save the photos with the polygons in report entity".
-    // We need to send the collected damages.
-    // A better approach would be to store `damages` list instead of just `annotations` map, OR
-    // we can map the annotations back to images if we had a way to lookup metadata.
-    // Since we don't have a global lookup, we should probably store the metadata when we save the annotation.
-
-    // Let's refactor `annotations` to store metadata too.
-    // Actually, let's just do it right now in the payload construction if we can, but we can't access previous image metadata.
-    // So I will change `annotations` state to store metadata.
-  };
-
   // Refactored State for Damages
   const [damages, setDamages] = useState<
     Record<
@@ -152,7 +130,7 @@ const Page = () => {
   const generateReport = async () => {
     const damageList = Object.values(damages);
     if (damageList.length === 0) {
-      alert("No damages annotated.");
+      showModal("No Damages", "No damages annotated. Please annotate images before generating a report.");
       return;
     }
 
@@ -215,14 +193,14 @@ const Page = () => {
       });
       
       if (res.ok) {
-        alert("Report generated successfully!");
+        showModal("Success", "Report generated successfully!");
         setDamages({}); // Clear after save
       } else {
-        alert("Failed to generate report.");
+        showModal("Error", "Failed to generate report.");
       }
     } catch (e) {
       console.error(e);
-      alert("Error generating report.");
+      showModal("Error", "An error occurred while generating the report.");
     } finally {
       setIsGeneratingReport(false);
     }
@@ -323,6 +301,24 @@ const Page = () => {
           isReportView={selectedImage.isReportView}
         />
       </div>
+
+      {/* Global Modal */}
+      {modalOpen && (
+        <Modal
+          onClose={closeModal}
+          title={modalContent.title}
+          actionBar={
+            <button
+              onClick={closeModal}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+            >
+              OK
+            </button>
+          }
+        >
+          <p>{modalContent.message}</p>
+        </Modal>
+      )}
     </div>
   );
 };

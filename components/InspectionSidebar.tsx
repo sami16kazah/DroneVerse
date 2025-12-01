@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList, FaTrash } from "react-icons/fa";
+import Modal from "./Modal";
 
 interface IInspection {
   _id: string;
@@ -61,6 +62,22 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
   const [reports, setReports] = useState<IReport[]>([]);
   const [expandedReports, setExpandedReports] = useState<Record<string, boolean>>({});
 
+  // Modal State
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<{ title: string; message: string; onConfirm?: () => void }>({
+    title: "",
+    message: "",
+  });
+
+  const showModal = (title: string, message: string, onConfirm?: () => void) => {
+    setModalContent({ title, message, onConfirm });
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+  };
+
   useEffect(() => {
     if (activeTab === "inspections") {
       fetch("/api/inspection")
@@ -83,48 +100,56 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
     setExpandState((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleDeleteInspection = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteInspection = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("handleDeleteInspection called for ID:", id);
-    if (!confirm("Are you sure you want to delete this inspection? This will delete all associated images.")) return;
-
-    try {
-      console.log("Sending DELETE request to /api/inspection");
-      const res = await fetch(`/api/inspection?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      console.log("Delete response:", data);
-      if (data.success) {
-        setInspections((prev) => prev.filter((i) => i._id !== id));
-        console.log("Inspection removed from state");
-      } else {
-        alert("Failed to delete inspection: " + data.error);
+    showModal(
+      "Delete Inspection",
+      "Are you sure you want to delete this inspection? This will delete all associated images.",
+      async () => {
+        try {
+          const res = await fetch(`/api/inspection?id=${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success) {
+            setInspections((prev) => prev.filter((i) => i._id !== id));
+            closeModal();
+          } else {
+            // Show error in modal (re-use modal or simple alert fallback if nested modal is tricky, but let's just update content)
+             // For simplicity, let's close and show error
+             closeModal();
+             setTimeout(() => showModal("Error", "Failed to delete inspection: " + data.error), 100);
+          }
+        } catch (err) {
+          console.error("Frontend Delete Error:", err);
+          closeModal();
+          setTimeout(() => showModal("Error", "An error occurred while deleting."), 100);
+        }
       }
-    } catch (err) {
-      console.error("Frontend Delete Error:", err);
-      alert("An error occurred while deleting.");
-    }
+    );
   };
 
-  const handleDeleteReport = async (id: string, e: React.MouseEvent) => {
+  const handleDeleteReport = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("handleDeleteReport called for ID:", id);
-    if (!confirm("Are you sure you want to delete this report? This will delete all associated images.")) return;
-
-    try {
-      console.log("Sending DELETE request to /api/report");
-      const res = await fetch(`/api/report?id=${id}`, { method: "DELETE" });
-      const data = await res.json();
-      console.log("Delete response:", data);
-      if (data.success) {
-        setReports((prev) => prev.filter((r) => r._id !== id));
-        console.log("Report removed from state");
-      } else {
-        alert("Failed to delete report: " + data.error);
+    showModal(
+      "Delete Report",
+      "Are you sure you want to delete this report? This will delete all associated images.",
+      async () => {
+        try {
+          const res = await fetch(`/api/report?id=${id}`, { method: "DELETE" });
+          const data = await res.json();
+          if (data.success) {
+            setReports((prev) => prev.filter((r) => r._id !== id));
+            closeModal();
+          } else {
+            closeModal();
+            setTimeout(() => showModal("Error", "Failed to delete report: " + data.error), 100);
+          }
+        } catch (err) {
+          console.error("Frontend Delete Error:", err);
+          closeModal();
+          setTimeout(() => showModal("Error", "An error occurred while deleting."), 100);
+        }
       }
-    } catch (err) {
-      console.error("Frontend Delete Error:", err);
-      alert("An error occurred while deleting.");
-    }
+    );
   };
 
   // Auto-expand logic for Inspections (existing)
@@ -386,6 +411,42 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
           </div>
         )}
       </div>
+      {/* Modal */}
+      {modalOpen && (
+        <Modal
+          onClose={closeModal}
+          title={modalContent.title}
+          actionBar={
+            <div className="flex gap-2">
+              {modalContent.onConfirm ? (
+                <>
+                  <button
+                    onClick={modalContent.onConfirm}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-500 transition-colors"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={closeModal}
+                    className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 transition-colors"
+                >
+                  OK
+                </button>
+              )}
+            </div>
+          }
+        >
+          <p>{modalContent.message}</p>
+        </Modal>
+      )}
     </div>
   );
 };
