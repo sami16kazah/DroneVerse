@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import ImageEditingNav from "../components/ImageEditingNav";
 import ZoomableImage, { Annotation } from "../components/ZoomableImage";
 import InspectionSidebar from "../components/InspectionSidebar";
+import { captureImageWithAnnotations } from "../utils/imageCapture";
 import { FaBars, FaTimes, FaFilePdf } from "react-icons/fa";
 
 const Page = () => {
@@ -155,12 +156,59 @@ const Page = () => {
 
     setIsGeneratingReport(true);
     try {
+      // Process each damage: Capture image -> Upload -> Update URL
+      const processedDamages = await Promise.all(
+        damageList.map(async (damage) => {
+          const filtersForImage = filters[damage.imagePublicId] || defaultFilters;
+          const filterString = `brightness(${filtersForImage.brightness}%) contrast(${filtersForImage.contrast}%) saturate(${filtersForImage.saturate}%) blur(${filtersForImage.blur}px) grayscale(${filtersForImage.grayscale}%) hue-rotate(${filtersForImage.hueRotate}deg)`;
+
+          try {
+            const blob = await captureImageWithAnnotations(
+              damage.imageUrl,
+              damage.annotations,
+              filterString
+            );
+
+            if (!blob) throw new Error("Failed to capture image");
+
+            // Upload to Cloudinary
+            const formData = new FormData();
+            formData.append("file", blob);
+            const folderPath = `Reports/${damage.turbine}/${damage.blade}`;
+            formData.append("folderPath", folderPath);
+
+            const uploadRes = await fetch("/api/upload", {
+              method: "POST",
+              body: formData,
+            });
+
+            const uploadData = await uploadRes.json();
+
+            if (!uploadData.secure_url) {
+              throw new Error("Upload failed");
+            }
+
+            return {
+              ...damage,
+              imageUrl: uploadData.secure_url,
+              imagePublicId: uploadData.public_id,
+              // We keep annotations in metadata but the image itself now has them burned in
+              // The report viewer might want to know this.
+              // For now, we just update the URL.
+            };
+          } catch (err) {
+            console.error("Error processing image for report:", err);
+            return damage; // Fallback to original if processing fails
+          }
+        })
+      );
+
       const res = await fetch("/api/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clientName: selectedImage.clientName || "Client Report",
-          damages: damageList,
+          damages: processedDamages,
         }),
       });
       
