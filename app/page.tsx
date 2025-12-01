@@ -27,23 +27,39 @@ const Page = () => {
   );
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
-  const [filters, setFilters] = useState({
+  const defaultFilters = {
     brightness: 100,
     contrast: 100,
     saturate: 100,
     blur: 0,
     grayscale: 0,
     hueRotate: 0,
-  });
-
-  const handleFilterChange = (
-    key: keyof typeof filters,
-    value: number
-  ) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const filterString = `brightness(${filters.brightness}%) contrast(${filters.contrast}%) saturate(${filters.saturate}%) blur(${filters.blur}px) grayscale(${filters.grayscale}%) hue-rotate(${filters.hueRotate}deg)`;
+  const [filters, setFilters] = useState<Record<string, typeof defaultFilters>>(
+    {}
+  );
+
+  const currentFilters =
+    selectedImage.publicId && filters[selectedImage.publicId]
+      ? filters[selectedImage.publicId]
+      : defaultFilters;
+
+  const handleFilterChange = (
+    key: keyof typeof defaultFilters,
+    value: number
+  ) => {
+    if (!selectedImage.publicId) return;
+    setFilters((prev) => ({
+      ...prev,
+      [selectedImage.publicId]: {
+        ...(prev[selectedImage.publicId] || defaultFilters),
+        [key]: value,
+      },
+    }));
+  };
+
+  const filterString = `brightness(${currentFilters.brightness}%) contrast(${currentFilters.contrast}%) saturate(${currentFilters.saturate}%) blur(${currentFilters.blur}px) grayscale(${currentFilters.grayscale}%) hue-rotate(${currentFilters.hueRotate}deg)`;
 
   const handleImageSelect = (data: {
     url: string;
@@ -243,12 +259,12 @@ const Page = () => {
       {/* Right Sidebar - Controls */}
       <div className="w-full lg:w-80 flex-shrink-0 bg-gray-800 border-t lg:border-t-0 lg:border-l border-gray-700 order-2 lg:order-2 h-1/2 lg:h-full overflow-y-auto">
         <ImageEditingNav
-          brightness={filters.brightness}
-          contrast={filters.contrast}
-          saturate={filters.saturate}
-          blur={filters.blur}
-          grayscale={filters.grayscale}
-          hueRotate={filters.hueRotate}
+          brightness={currentFilters.brightness}
+          contrast={currentFilters.contrast}
+          saturate={currentFilters.saturate}
+          blur={currentFilters.blur}
+          grayscale={currentFilters.grayscale}
+          hueRotate={currentFilters.hueRotate}
           onChange={handleFilterChange}
           onGenerateReport={generateReport}
           isGeneratingReport={isGeneratingReport}
