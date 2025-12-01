@@ -160,7 +160,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
       onSaveAnnotation({
         type: drawingMode,
         points: currentPoints,
-        color: "rgba(255, 0, 0, 0.5)",
+        color: "rgba(255, 0, 0, 0.0)",
         crackLevel: crackLevel,
       });
     }
@@ -199,7 +199,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
             width={`${width}%`}
             height={`${height}%`}
             fill={color}
-          stroke="red"
+            stroke="orange"
             strokeWidth="2"
             vectorEffect="non-scaling-stroke"
           />
@@ -214,7 +214,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
           // SVG polygon points attribute doesn't support % directly in all browsers/contexts easily without viewBox
           // But since we are inside an SVG with viewBox="0 0 100 100" and preserveAspectRatio="none", it works!
             fill={color}
-          stroke="red"
+            stroke="orange"
             strokeWidth="2"
             vectorEffect="non-scaling-stroke"
           />
@@ -337,7 +337,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                     renderShape(
                       currentPoints,
                       drawingMode,
-                      "rgba(255, 255, 0, 0.5)",
+                      "rgba(128, 128, 128, 0.5)",
                       "current"
                     )}
                 </svg>
