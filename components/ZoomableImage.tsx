@@ -182,8 +182,12 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
     points: number[][],
     type: "square" | "polygon",
     color: string,
+    crackLevel?: number,
     key?: string | number
   ) => {
+    let shape = null;
+    let crackIndicator = null;
+
     if (type === "square") {
       if (points.length < 2) return null;
       const [p1, p2] = points;
@@ -191,35 +195,75 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
       const y = Math.min(p1[1], p2[1]);
       const width = Math.abs(p1[0] - p2[0]);
       const height = Math.abs(p1[1] - p2[1]);
-      return (
-          <rect
-          key={key}
-            x={`${x}%`}
-            y={`${y}%`}
-            width={`${width}%`}
-            height={`${height}%`}
-            fill={color}
-            stroke="orange"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
+      shape = (
+        <rect
+          x={`${x}%`}
+          y={`${y}%`}
+          width={`${width}%`}
+          height={`${height}%`}
+          fill={color}
+          stroke="orange"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
       );
     } else {
       // Polygon
       const pointsStr = points.map((p) => `${p[0]},${p[1]}`).join(" ");
-      return (
-          <polygon
-          key={key}
-          points={pointsStr} // This needs to be handled carefully as points are %
-          // SVG polygon points attribute doesn't support % directly in all browsers/contexts easily without viewBox
-          // But since we are inside an SVG with viewBox="0 0 100 100" and preserveAspectRatio="none", it works!
-            fill={color}
-            stroke="orange"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
+      shape = (
+        <polygon
+          points={pointsStr}
+          fill={color}
+          stroke="orange"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
       );
     }
+
+    if (crackLevel) {
+      const minX = Math.min(...points.map((p) => p[0]));
+      const minY = Math.min(...points.map((p) => p[1]));
+      const size = 3; // Fixed size for better visibility
+      // Position outside top-left
+      const indicatorX = minX - size - 0.5;
+      const indicatorY = minY;
+
+      crackIndicator = (
+        <g>
+          <rect
+            x={`${indicatorX}%`}
+            y={`${indicatorY}%`}
+            width={`${size}%`}
+            height={`${size}%`}
+            fill="red"
+            rx="0.5"
+            stroke="white"
+            strokeWidth="0.2"
+          />
+          <text
+            x={`${indicatorX + size / 2}%`}
+            y={`${indicatorY + size / 2}%`}
+            fill="white"
+            fontSize={`${size * 0.6}px`} // Using px for font size in SVG often works better or needs % relative to viewBox
+            // In 0-100 viewBox, 1.8px is 1.8% of view.
+            style={{ fontSize: "0.2rem", userSelect: "none" }} // Fallback or alternative sizing
+            fontWeight="bold"
+            textAnchor="middle"
+            dominantBaseline="central"
+          >
+            {crackLevel}
+          </text>
+        </g>
+      );
+    }
+
+    return (
+      <g key={key}>
+        {shape}
+        {crackIndicator}
+      </g>
+    );
   };
 
   return (
@@ -328,7 +372,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                 >
                   {/* Existing Annotations */}
                   {annotations.map((ann, i) =>
-                    renderShape(ann.points, ann.type, ann.color, i)
+                    renderShape(ann.points, ann.type, ann.color, ann.crackLevel, i)
                   )}
 
                   {/* Current Drawing */}
@@ -338,6 +382,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                       currentPoints,
                       drawingMode,
                       "rgba(128, 128, 128, 0.5)",
+                      crackLevel,
                       "current"
                     )}
                 </svg>
