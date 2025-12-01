@@ -25,6 +25,7 @@ export interface IDamage {
 }
 
 export interface IReport extends Document {
+  userId: string;
   clientName: string;
   createdAt: Date;
   damages: IDamage[];
@@ -55,6 +56,7 @@ const DamageSchema = new Schema<IDamage>({
 });
 
 const ReportSchema = new Schema<IReport>({
+  userId: { type: String, required: true },
   clientName: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
   damages: [DamageSchema],

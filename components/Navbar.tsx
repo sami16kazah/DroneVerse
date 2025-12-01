@@ -1,6 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface NavbarProps {
   className?: string;
@@ -8,6 +9,27 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ className }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data && data.user) setUser(data.user);
+      })
+      .catch(() => setUser(null));
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <nav className={`bg-gray-800 border-b border-gray-700 ${className}`}>
@@ -19,19 +41,53 @@ const Navbar: React.FC<NavbarProps> = ({ className }) => {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <Link
-                  href="/"
-                  className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Home
-                </Link>
-                <Link
-                  href="/upload"
-                  className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Upload
-                </Link>
+                {user && (
+                  <>
+                    <Link
+                      href="/"
+                      className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Home
+                    </Link>
+                    <Link
+                      href="/upload"
+                      className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                    >
+                      Upload
+                    </Link>
+                  </>
+                )}
               </div>
+            </div>
+          </div>
+          <div className="hidden md:block">
+            <div className="ml-4 flex items-center md:ml-6">
+              {user ? (
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-300 text-sm">Welcome, {user.name}</span>
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/login"
+                    className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    Register
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">
@@ -85,18 +141,43 @@ const Navbar: React.FC<NavbarProps> = ({ className }) => {
       {isOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link
-              href="/"
-              className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Home
-            </Link>
-            <Link
-              href="/upload"
-              className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-            >
-              Upload
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/"
+                  className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Home
+                </Link>
+                <Link
+                  href="/upload"
+                  className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Upload
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="text-gray-300 hover:bg-gray-700 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Register
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

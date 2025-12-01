@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IInspection extends Document {
+  userId: string;
   clientName: string;
   employeeName: string;
   location: {
@@ -27,6 +28,7 @@ export interface IInspection extends Document {
 }
 
 const InspectionSchema: Schema = new Schema({
+  userId: { type: String, required: true },
   clientName: { type: String, required: true },
   employeeName: { type: String, required: true },
   location: {

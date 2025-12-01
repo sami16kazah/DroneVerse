@@ -1,18 +1,34 @@
 "use client";
 import React, { useState, useRef } from 'react';
 import Navbar from '../../components/Navbar';
+import Modal from '../../components/Modal';
 
 const UploadPage = () => {
   const [uploading, setUploading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     clientName: '',
-    employeeName: 'Test Employee', // Default as requested
+    employeeName: '',
     city: '',
     address: '',
     postcode: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => {
+        if (res.ok) return res.json();
+        return null;
+      })
+      .then((data) => {
+        if (data && data.user) {
+          setFormData((prev) => ({ ...prev, employeeName: data.user.name }));
+        }
+      })
+      .catch((err) => console.error("Failed to fetch user:", err));
+  }, []);
 
   const addLog = (msg: string) => {
     setLogs((prev) => [...prev, msg]);
@@ -66,7 +82,8 @@ const UploadPage = () => {
     if (!files || files.length === 0) return;
 
     if (!formData.clientName || !formData.city) {
-        alert("Please fill in Client Name and City.");
+        setShowModal(true);
+        if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
         return;
     }
 
@@ -301,6 +318,25 @@ const UploadPage = () => {
                 </div>
             </div>
         </div>
+
+        {showModal && (
+            <Modal
+                onClose={() => setShowModal(false)}
+                title="Missing Information"
+                actionBar={
+                    <button
+                        onClick={() => setShowModal(false)}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                        OK
+                    </button>
+                }
+            >
+                <p className="text-gray-300">
+                    Please fill in the <strong>Client Name</strong> and <strong>City</strong> before uploading files.
+                </p>
+            </Modal>
+        )}
     </div>
   );
 };
