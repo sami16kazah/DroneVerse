@@ -1,27 +1,11 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '../../../lib/db';
 import Inspection from '../../../models/Inspection';
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
-
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this";
 
 export async function POST(request: Request) {
   try {
     await dbConnect();
-    
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token");
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded: any = jwt.verify(token.value, JWT_SECRET);
-    const userId = decoded.userId;
-
     const body = await request.json();
-    body.userId = userId; // Associate with user
 
     const inspection = await Inspection.create(body);
 
@@ -35,18 +19,7 @@ export async function POST(request: Request) {
 export async function GET() {
   try {
     await dbConnect();
-
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token");
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded: any = jwt.verify(token.value, JWT_SECRET);
-    const userId = decoded.userId;
-
-    const inspections = await Inspection.find({ userId }).sort({ createdAt: -1 });
+    const inspections = await Inspection.find({}).sort({ createdAt: -1 });
     return NextResponse.json({ success: true, data: inspections }, { status: 200 });
   } catch (error) {
     console.error('Database Error:', error);
@@ -76,22 +49,11 @@ export async function DELETE(request: Request) {
     }
 
     logToFile(`Attempting to delete inspection with ID: ${id}`);
-    
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth_token");
-
-    if (!token) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const decoded: any = jwt.verify(token.value, JWT_SECRET);
-    const userId = decoded.userId;
-
-    const inspection = await Inspection.findOne({ _id: id, userId });
+    const inspection = await Inspection.findById(id);
 
     if (!inspection) {
-      logToFile("Error: Inspection not found or unauthorized");
-      return NextResponse.json({ success: false, error: 'Inspection not found or unauthorized' }, { status: 404 });
+      logToFile("Error: Inspection not found");
+      return NextResponse.json({ success: false, error: 'Inspection not found' }, { status: 404 });
     }
 
     // Collect all public IDs
