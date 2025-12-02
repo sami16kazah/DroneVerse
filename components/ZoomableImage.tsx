@@ -17,6 +17,7 @@ export interface Annotation {
   points: number[][]; // [[x, y], ...] in percentages
   color: string;
   crackLevel?: number;
+  crackLevelPosition?: number[]; // [x, y]
 }
 
 interface ZoomableImageProps {
@@ -60,6 +61,8 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   // Crack Level State
   const [showCrackLevelInput, setShowCrackLevelInput] = useState(false);
   const [crackLevel, setCrackLevel] = useState<number>(1);
+  const [isPlacingCrackLevel, setIsPlacingCrackLevel] = useState(false);
+  const [tempCrackLevelPos, setTempCrackLevelPos] = useState<number[] | null>(null);
 
   // Helper to generate Cloudinary URL
   const getCloudinaryUrl = (pid: string, transformations: string) => {
@@ -126,9 +129,16 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   };
 
   const handleSvgClick = (e: React.MouseEvent) => {
-    if (!drawingMode) return;
+    if (!drawingMode && !isPlacingCrackLevel) return;
     const coords = getRelativeCoords(e);
     if (!coords) return;
+
+    if (isPlacingCrackLevel) {
+      setTempCrackLevelPos(coords);
+      setIsPlacingCrackLevel(false);
+      setShowCrackLevelInput(true);
+      return;
+    }
 
     if (drawingMode === "polygon") {
       setCurrentPoints((prev) => [...prev, coords]);
@@ -148,18 +158,25 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (drawingMode === "square" && tempSquareStart) {
-      const coords = getRelativeCoords(e);
-      if (coords) {
-        // Update temporary end point for visualization
+    const coords = getRelativeCoords(e);
+    if (!coords) return;
+
+    if (isPlacingCrackLevel) {
+      setTempCrackLevelPos(coords);
+    } else if (drawingMode === "square" && tempSquareStart) {
+      // Update temporary end point for visualization
       setCurrentPoints([tempSquareStart, coords]);
-      }
     }
   };
 
   const confirmShape = () => {
     if (currentPoints.length < 2) return;
-    setShowCrackLevelInput(true);
+    // Instead of showing input immediately, start placement mode
+    setIsPlacingCrackLevel(true);
+    // Initialize temp pos to last point or center of shape
+    if (currentPoints.length > 0) {
+        setTempCrackLevelPos(currentPoints[currentPoints.length - 1]);
+    }
   };
 
   const finalizeShape = () => {
@@ -169,6 +186,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
         points: currentPoints,
         color: "rgba(255, 0, 0, 0.0)",
         crackLevel: crackLevel,
+        crackLevelPosition: tempCrackLevelPos || undefined,
       });
     }
     setDrawingMode(null);
@@ -176,12 +194,17 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
     setTempSquareStart(null);
     setShowCrackLevelInput(false);
     setCrackLevel(1);
+    setIsPlacingCrackLevel(false);
+    setTempCrackLevelPos(null);
   };
 
   const discardShape = () => {
     setDrawingMode(null);
     setCurrentPoints([]);
     setTempSquareStart(null);
+    setIsPlacingCrackLevel(false);
+    setTempCrackLevelPos(null);
+    setShowCrackLevelInput(false);
   };
 
   // Render Helpers
@@ -190,6 +213,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
     type: "square" | "polygon",
     color: string,
     crackLevel?: number,
+    crackLevelPosition?: number[],
     key?: string | number
   ) => {
     let shape = null;
@@ -229,12 +253,19 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
     }
 
     if (crackLevel) {
-      const minX = Math.min(...points.map((p) => p[0]));
-      const minY = Math.min(...points.map((p) => p[1]));
+      let indicatorX, indicatorY;
       const size = 3; // Fixed size for better visibility
-      // Position outside top-left
-      const indicatorX = minX - size - 0.5;
-      const indicatorY = minY;
+
+      if (crackLevelPosition) {
+        indicatorX = crackLevelPosition[0] - size / 2;
+        indicatorY = crackLevelPosition[1] - size / 2;
+      } else {
+        const minX = Math.min(...points.map((p) => p[0]));
+        const minY = Math.min(...points.map((p) => p[1]));
+        // Position outside top-left
+        indicatorX = minX - size - 0.5;
+        indicatorY = minY;
+      }
 
       crackIndicator = (
         <g>
@@ -408,11 +439,11 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                   onClick={!readOnly ? handleSvgClick : undefined}
                   onDoubleClick={!readOnly ? confirmShape : undefined}
                   onMouseMove={!readOnly ? handleMouseMove : undefined}
-                  style={{ cursor: drawingMode ? "crosshair" : "default", pointerEvents: readOnly ? "none" : "auto" }}
+                  style={{ cursor: drawingMode || isPlacingCrackLevel ? "crosshair" : "default", pointerEvents: readOnly ? "none" : "auto" }}
                 >
                   {/* Existing Annotations */}
                   {annotations.map((ann, i) =>
-                    renderShape(ann.points, ann.type, ann.color, ann.crackLevel, i)
+                    renderShape(ann.points, ann.type, ann.color, ann.crackLevel, ann.crackLevelPosition, i)
                   )}
 
                   {/* Current Drawing */}
@@ -423,8 +454,23 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                       drawingMode,
                       "rgba(128, 128, 128, 0.5)",
                       crackLevel,
+                      undefined, // No crack level pos yet
                       "current"
                     )}
+                  
+                  {/* Placement Indicator */}
+                  {isPlacingCrackLevel && tempCrackLevelPos && (
+                     <g>
+                        <rect
+                          x={`${tempCrackLevelPos[0] - 1.5}%`}
+                          y={`${tempCrackLevelPos[1] - 1.5}%`}
+                          width="3%"
+                          height="3%"
+                          fill="red"
+                          opacity="0.7"
+                        />
+                     </g>
+                  )}
                 </svg>
         </div>
             </TransformComponent>

@@ -5,6 +5,7 @@ export interface IAnnotation {
   points: number[][]; // [[x, y], [x, y]] - stored as percentages (0-100)
   color: string;
   crackLevel?: number;
+  crackLevelPosition?: number[]; // [x, y]
 }
 
 export interface IDamage {
@@ -36,6 +37,7 @@ const AnnotationSchema = new Schema<IAnnotation>({
   points: { type: [[Number]], required: true },
   color: { type: String, required: true },
   crackLevel: { type: Number, min: 1, max: 5 },
+  crackLevelPosition: { type: [Number] },
 });
 
 const DamageSchema = new Schema<IDamage>({
