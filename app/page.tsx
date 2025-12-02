@@ -243,6 +243,15 @@ const Page = () => {
             annotations={damages[selectedImage.publicId]?.annotations || []}
             onSaveAnnotation={handleSaveAnnotationWithMeta}
             readOnly={selectedImage.isReportView}
+            thumbnails={selectedImage.thumbnails}
+            onThumbnailSelect={(thumb) =>
+              setSelectedImage((prev) => ({
+                ...prev,
+                url: thumb.url,
+                publicId: thumb.publicId,
+                side: thumb.side,
+              }))
+            }
           />
         </div>
 
@@ -254,39 +263,6 @@ const Page = () => {
               : "Inspection View"}
           </span>
         </div>
-
-        {/* Thumbnails Filmstrip */}
-        {selectedImage.thumbnails && selectedImage.thumbnails.length > 0 && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 p-2 overflow-x-auto z-20 bg-gradient-to-t from-black/80 to-transparent">
-            {selectedImage.thumbnails.map((thumb, idx) => (
-              <button
-                key={idx}
-                onClick={() =>
-                  setSelectedImage((prev) => ({
-                    ...prev,
-                    url: thumb.url,
-                    publicId: thumb.publicId,
-                    side: thumb.side,
-                  }))
-                }
-                className={`flex-shrink-0 relative w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
-                  selectedImage.publicId === thumb.publicId
-                    ? "border-blue-500 scale-110"
-                    : "border-transparent opacity-70 hover:opacity-100"
-                }`}
-              >
-                <img
-                  src={thumb.url} // Could use Cloudinary transform for thumbnail size here
-                  alt={thumb.side}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[10px] text-center truncate px-1">
-                  {thumb.side}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Right Sidebar - Controls */}

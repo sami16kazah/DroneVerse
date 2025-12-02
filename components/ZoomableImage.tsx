@@ -27,6 +27,8 @@ interface ZoomableImageProps {
   annotations?: Annotation[];
   onSaveAnnotation?: (annotation: Annotation) => void;
   readOnly?: boolean;
+  thumbnails?: { url: string; publicId: string; side: string }[];
+  onThumbnailSelect?: (thumb: { url: string; publicId: string; side: string }) => void;
 }
 
 const ZoomableImage: React.FC<ZoomableImageProps> = ({
@@ -38,6 +40,8 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
   annotations = [],
   onSaveAnnotation,
   readOnly = false,
+  thumbnails = [],
+  onThumbnailSelect,
 }) => {
   const [currentSrc, setCurrentSrc] = useState(lowResSrc);
   const [isHighResLoaded, setIsHighResLoaded] = useState(false);
@@ -283,15 +287,15 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
         {({ zoomIn, zoomOut, resetTransform }) => (
           <>
             {/* Controls */}
-            <div className="absolute top-4 right-4 z-50 flex flex-col gap-2">
+            <div className="absolute top-4 right-4 z-50 flex flex-col gap-2 items-end">
               <div className="flex gap-2 bg-gray-800/80 p-2 rounded-full backdrop-blur-sm">
-                    <button
+                <button
                   onClick={() => zoomIn()}
                   className="text-white p-2 hover:text-blue-400 transition-colors"
                   title="Zoom In"
                 >
                   <FaSearchPlus size={18} />
-                    </button>
+                </button>
                 <button
                   onClick={() => zoomOut()}
                   className="text-white p-2 hover:text-blue-400 transition-colors"
@@ -310,43 +314,72 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
 
               {/* Drawing Tools */}
               {!readOnly && (
-              <div className="flex gap-2 bg-gray-800/80 p-2 rounded-full backdrop-blur-sm mt-2 justify-center">
-                {!drawingMode ? (
-                  <>
-                    <button
-                      onClick={() => setDrawingMode("square")}
-                      className="text-white p-2 hover:text-green-400 transition-colors"
-                      title="Draw Square"
-                    >
-                      <FaSquare size={18} />
-                    </button>
-                    <button
-                      onClick={() => setDrawingMode("polygon")}
-                      className="text-white p-2 hover:text-green-400 transition-colors"
-                      title="Draw Polygon"
-                    >
-                      <FaDrawPolygon size={18} />
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={confirmShape}
-                      className="text-green-400 p-2 hover:text-green-300 transition-colors"
-                      title="Confirm Shape"
-                    >
-                      <FaCheck size={18} />
-                    </button>
-                    <button
-                      onClick={discardShape}
-                      className="text-red-400 p-2 hover:text-red-300 transition-colors"
-                      title="Discard Shape"
-                    >
-                      <FaTimes size={18} />
-                    </button>
-                  </>
-                )}
-              </div>
+                <div className="flex gap-2 bg-gray-800/80 p-2 rounded-full backdrop-blur-sm justify-center">
+                  {!drawingMode ? (
+                    <>
+                      <button
+                        onClick={() => setDrawingMode("square")}
+                        className="text-white p-2 hover:text-green-400 transition-colors"
+                        title="Draw Square"
+                      >
+                        <FaSquare size={18} />
+                      </button>
+                      <button
+                        onClick={() => setDrawingMode("polygon")}
+                        className="text-white p-2 hover:text-green-400 transition-colors"
+                        title="Draw Polygon"
+                      >
+                        <FaDrawPolygon size={18} />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={confirmShape}
+                        className="text-green-400 p-2 hover:text-green-300 transition-colors"
+                        title="Confirm Shape"
+                      >
+                        <FaCheck size={18} />
+                      </button>
+                      <button
+                        onClick={discardShape}
+                        className="text-red-400 p-2 hover:text-red-300 transition-colors"
+                        title="Discard Shape"
+                      >
+                        <FaTimes size={18} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Thumbnails Grid */}
+              {thumbnails.length > 0 && (
+                <div className="bg-gray-800/80 p-2 rounded-lg backdrop-blur-sm mt-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {thumbnails.map((thumb, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => onThumbnailSelect && onThumbnailSelect(thumb)}
+                        className={`relative w-16 h-16 rounded overflow-hidden border-2 transition-all ${
+                          publicId === thumb.publicId
+                            ? "border-blue-500 opacity-100"
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
+                        title={thumb.side}
+                      >
+                        <img
+                          src={thumb.url}
+                          alt={thumb.side}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center truncate px-1 text-white">
+                          {thumb.side}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 
