@@ -39,4 +39,3 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # DroneVerse
 >>>>>>> cdef7e81817b7612f420b415613ca604a731d8ef
 
-i am going to deploy to vercel now add rate limitng helmet and other important feuture make sure the code is deployable in vercel

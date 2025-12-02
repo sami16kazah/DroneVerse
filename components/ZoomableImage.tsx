@@ -73,7 +73,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
     ? getCloudinaryUrl(publicId, "f_auto,q_auto:low,w_800")
     : lowResSrc;
   const effectiveHighRes = publicId
-    ? getCloudinaryUrl(publicId, "f_auto,q_auto:best")
+    ? getCloudinaryUrl(publicId, "f_auto,q_auto:good,w_4096,c_limit")
     : highResSrc;
 
   useEffect(() => {
@@ -406,6 +406,7 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
                   onClick={!readOnly ? handleSvgClick : undefined}
+                  onDoubleClick={!readOnly ? confirmShape : undefined}
                   onMouseMove={!readOnly ? handleMouseMove : undefined}
                   style={{ cursor: drawingMode ? "crosshair" : "default", pointerEvents: readOnly ? "none" : "auto" }}
                 >

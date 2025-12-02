@@ -293,7 +293,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                                                 className="relative aspect-square rounded overflow-hidden border border-gray-700 hover:border-blue-400 transition-colors"
                                               >
                                                 <img
-                                                  src={getOptimizedImageUrl(img.url, img.publicId, 100, 100)}
+                                                  src={getOptimizedImageUrl(img.url, img.publicId, 150, 150, "auto")}
                                                   alt={`${side.name} ${iIdx + 1}`}
                                                   className="w-full h-full object-cover"
                                                   loading="lazy"

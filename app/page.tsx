@@ -234,7 +234,8 @@ const Page = () => {
 
 
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-          <ZoomableImage
+            <ZoomableImage
+            key={selectedImage.publicId || selectedImage.url}
             lowResSrc={selectedImage.url}
             highResSrc={selectedImage.url}
             publicId={selectedImage.publicId}
