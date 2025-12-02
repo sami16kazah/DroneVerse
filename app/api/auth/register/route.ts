@@ -15,7 +15,8 @@ const connectDB = async () => {
 export async function POST(req: Request) {
   try {
     await connectDB();
-    const { name, email, password } = await req.json();
+    const { name, email: rawEmail, password } = await req.json();
+    const email = rawEmail?.toLowerCase();
 
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });

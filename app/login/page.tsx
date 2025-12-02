@@ -3,8 +3,11 @@ import React, { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+import { useAuth } from "../../context/AuthContext";
+
 const LoginPage = () => {
   const router = useRouter();
+  const { login } = useAuth();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified");
 
@@ -30,8 +33,8 @@ const LoginPage = () => {
       const data = await res.json();
 
       if (res.ok) {
+        login(data.user); // Update global auth state
         router.push("/");
-        router.refresh();
       } else {
         setError(data.error || "Login failed");
       }

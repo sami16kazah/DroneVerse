@@ -22,10 +22,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const user = await User.findOne({ email });
+    console.log(`Login attempt for email: ${email}`);
+
+    // Try to find user (case-insensitive for robustness)
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, "i") } });
+    
     if (!user) {
+      console.log("User not found");
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
+
+    console.log(`User found: ${user.email}, Verified: ${user.isVerified}`);
 
     if (!user.isVerified) {
       return NextResponse.json({ error: "Please verify your email first." }, { status: 403 });
@@ -33,6 +40,7 @@ export async function POST(req: Request) {
 
     const isMatch = await bcrypt.compare(password, user.password || "");
     if (!isMatch) {
+      console.log("Password mismatch");
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 

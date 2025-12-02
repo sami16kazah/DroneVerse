@@ -27,7 +27,7 @@ export const generatePDF = async (report: IReport) => {
   // Logo (Text for now, can be replaced with image if available)
   doc.setFontSize(22);
   doc.setTextColor(0, 102, 204); // DroneVerse Blue
-  doc.text("DroneVerse", margin, yPos);
+  doc.text("DroneTVerse", margin, yPos);
   
   // Report Title
   doc.setFontSize(16);

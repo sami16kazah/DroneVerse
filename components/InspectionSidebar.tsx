@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboardList, FaTrash, FaDownload } from "react-icons/fa";
 import Modal from "./Modal";
+import Skeleton from "./ui/Skeleton";
 import { generatePDF, IReport } from "../utils/pdfGenerator";
 
 interface IInspection {
@@ -40,6 +41,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
   onSelectImage,
 }) => {
   const [activeTab, setActiveTab] = useState<"inspections" | "reports">("inspections");
+  const [isLoading, setIsLoading] = useState(true);
 
   // Inspection State
   const [inspections, setInspections] = useState<IInspection[]>([]);
@@ -66,20 +68,23 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
   };
 
   useEffect(() => {
+    setIsLoading(true);
     if (activeTab === "inspections") {
       fetch("/api/inspection")
         .then((res) => res.json())
         .then((data) => {
           if (data.success) setInspections(data.data);
         })
-        .catch((err) => console.error(err));
+        .catch((err) => console.error(err))
+        .finally(() => setIsLoading(false));
     } else {
       fetch("/api/report")
         .then((res) => res.json())
         .then((data) => {
           if (data.success) setReports(data.data);
         })
-        .catch((err) => console.error(err));
+        .catch((err) => console.error(err))
+        .finally(() => setIsLoading(false));
     }
   }, [activeTab]);
 
@@ -214,7 +219,19 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
       </div>
 
       <div className="flex-1 overflow-y-auto p-2">
-        {activeTab === "inspections" ? (
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="border border-gray-700 rounded-lg overflow-hidden">
+                <div className="p-3 bg-gray-700/20 flex items-center gap-2">
+                  <Skeleton className="w-3 h-3 rounded-full" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-16 ml-auto" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : activeTab === "inspections" ? (
           /* Inspections List */
           <div className="space-y-2">
             {inspections.map((inspection) => (

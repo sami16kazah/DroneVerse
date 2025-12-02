@@ -1,8 +1,8 @@
 import Mailjet from "node-mailjet";
 
 const mailjet = new Mailjet({
-  apiKey: process.env.MAILJET_API_KEY || "7a0b34b95ad9cf491929f6eb48f2d36e",
-  apiSecret: process.env.MAILJET_SECRET_KEY || "65850e6b617bd947172dfdc90f4e5adf",
+  apiKey: process.env.MAILJET_API_KEY ,
+  apiSecret: process.env.MAILJET_SECRET_KEY ,
 });
 
 export const sendVerificationEmail = async (toEmail: string, name: string, token: string) => {
@@ -14,7 +14,7 @@ export const sendVerificationEmail = async (toEmail: string, name: string, token
       Messages: [
         {
           From: {
-            Email: process.env.MAILJET_SENDER_EMAIL || "samkazah444@gmail.com", // Fallback to a likely verified email or ask user
+            Email: process.env.MAILJET_SENDER_EMAIL , // Fallback to a likely verified email or ask user
             Name: "DroneVerse",
           },
           To: [
