@@ -39,4 +39,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # DroneVerse
 >>>>>>> cdef7e81817b7612f420b415613ca604a731d8ef
 
-it shows the inspections and reports to all users change it to show only depending on the created user using the user id to fetch the wirte reports to the write user
+i am going to deploy to vercel now add rate limitng helmet and other important feuture make sure the code is deployable in vercel

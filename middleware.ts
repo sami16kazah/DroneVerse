@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { rateLimit } from "./utils/rateLimit";
 
 export function middleware(request: NextRequest) {
+  const ip = (request as any).ip || request.headers.get("x-forwarded-for") || "127.0.0.1";
+  const { success } = rateLimit(ip);
+
+  if (!success) {
+    return new NextResponse("Too Many Requests", { status: 429 });
+  }
+
   const token = request.cookies.get("auth_token")?.value;
   const { pathname } = request.nextUrl;
 
