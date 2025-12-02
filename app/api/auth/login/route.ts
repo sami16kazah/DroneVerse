@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       sameSite: "strict",
     });
 
-    const response = NextResponse.json({ success: true, user: { name: user.name, email: user.email } });
+    const response = NextResponse.json({ success: true, user: { _id: user._id, name: user.name, email: user.email } });
     response.headers.set("Set-Cookie", cookie);
 
     return response;

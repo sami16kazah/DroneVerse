@@ -1,18 +1,26 @@
 "use client";
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Navbar from '../../components/Navbar';
+import { useAuth } from '../../context/AuthContext';
 
 const UploadPage = () => {
+  const { user } = useAuth();
   const [uploading, setUploading] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     clientName: '',
-    employeeName: 'Test Employee', // Default as requested
+    employeeName: '',
     city: '',
     address: '',
     postcode: '',
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({ ...prev, employeeName: user.name }));
+    }
+  }, [user]);
 
   const addLog = (msg: string) => {
     setLogs((prev) => [...prev, msg]);

@@ -13,8 +13,8 @@ export async function GET() {
   }
 
   try {
-    const decoded = jwt.verify(token.value, JWT_SECRET);
-    return NextResponse.json({ user: decoded });
+    const decoded = jwt.verify(token.value, JWT_SECRET) as any;
+    return NextResponse.json({ user: { _id: decoded.userId, name: decoded.name, email: decoded.email } });
   } catch (error) {
     return NextResponse.json({ user: null }, { status: 401 });
   }
