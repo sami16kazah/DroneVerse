@@ -10,6 +10,7 @@ import {
   FaCheck,
   FaTimes,
 } from "react-icons/fa";
+import { getOptimizedImageUrl } from "../utils/cloudinary";
 
 export interface Annotation {
   type: "square" | "polygon";
@@ -369,9 +370,10 @@ const ZoomableImage: React.FC<ZoomableImageProps> = ({
                         title={thumb.side}
                       >
                         <img
-                          src={thumb.url}
+                          src={getOptimizedImageUrl(thumb.url, thumb.publicId, 100, 100)}
                           alt={thumb.side}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                         <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center truncate px-1 text-white">
                           {thumb.side}

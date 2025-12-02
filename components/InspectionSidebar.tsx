@@ -4,6 +4,7 @@ import { FaChevronDown, FaChevronRight, FaFolder, FaImage, FaFileAlt, FaClipboar
 import Modal from "./Modal";
 import Skeleton from "./ui/Skeleton";
 import { generatePDF, IReport } from "../utils/pdfGenerator";
+import { getOptimizedImageUrl } from "../utils/cloudinary";
 
 interface IInspection {
   _id: string;
@@ -152,40 +153,7 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
     clientName: string
   ) => {
     const bladeId = `${inspectionId}-${turbineName}-${blade.name}`;
-    const isExpanding = !expanded[bladeId];
-
     toggleExpand(bladeId, setExpanded);
-
-    if (isExpanding) {
-      // Find first side with images
-      const firstSideWithImages = blade.sides.find(
-        (s) => s.images && s.images.length > 0
-      );
-
-      if (firstSideWithImages) {
-        const firstImage = firstSideWithImages.images[0];
-        // Collect all thumbnails from this blade (all sides)
-        const allThumbnails = blade.sides.flatMap((s) =>
-          s.images.map((img) => ({
-            url: img.url,
-            publicId: img.publicId,
-            side: s.name,
-          }))
-        );
-
-        onSelectImage({
-          url: firstImage.url,
-          publicId: firstImage.publicId,
-          turbine: turbineName,
-          blade: blade.name,
-          side: firstSideWithImages.name,
-          thumbnails: allThumbnails,
-          annotations: [], // Inspections don't have annotations directly on images
-          clientName: clientName,
-          isReportView: false,
-        });
-      }
-    }
   };
 
   return (
@@ -275,39 +243,68 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
 
                               {expanded[bladeId] && (
                                 <div className="pl-4 py-1 space-y-1">
-                                  {blade.sides.map((side, sIdx) => (
-                                    <div key={sIdx}>
-                                      {side.images.map((img, iIdx) => (
+                                  {blade.sides.map((side, sIdx) => {
+                                    const sideId = `${bladeId}-${side.name}`;
+                                    const firstImage = side.images[0];
+                                    if (!firstImage) return null;
+                                    
+                                    return (
+                                      <div key={sIdx}>
                                         <button
-                                          key={iIdx}
-                                          onClick={() => {
-                                            const allThumbnails = blade.sides.flatMap((s) =>
-                                              s.images.map((i) => ({
-                                                url: i.url,
-                                                publicId: i.publicId,
-                                                side: s.name,
-                                              }))
-                                            );
-                                            onSelectImage({
-                                              url: img.url,
-                                              publicId: img.publicId,
-                                              turbine: turb.name,
-                                              blade: blade.name,
-                                              side: side.name,
-                                              thumbnails: allThumbnails,
-                                              annotations: [], // Inspections don't have annotations directly on images
-                                              clientName: inspection.clientName,
-                                              isReportView: false,
-                                            });
-                                          }}
-                                          className="w-full flex items-center gap-2 p-1.5 hover:bg-blue-900/30 hover:text-blue-400 rounded text-xs text-gray-400 transition-colors"
+                                          onClick={() => toggleExpand(sideId, setExpanded)}
+                                          className="w-full flex items-center gap-3 p-2 hover:bg-gray-700 rounded transition-colors group"
                                         >
-                                          <FaImage size={10} />
-                                          {side.name}
+                                          <div className="relative w-8 h-8 rounded overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-600 group-hover:border-blue-400 transition-colors">
+                                            <FaFolder size={16} className="text-yellow-500" />
+                                          </div>
+                                          <div className="flex flex-col items-start">
+                                            <span className="text-sm font-medium text-gray-300 group-hover:text-white">{side.name}</span>
+                                            <span className="text-[10px] text-gray-500">{side.images.length} images</span>
+                                          </div>
+                                          <div className="ml-auto text-gray-500">
+                                            {expanded[sideId] ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
+                                          </div>
                                         </button>
-                                      ))}
-                                    </div>
-                                  ))}
+
+                                        {expanded[sideId] && (
+                                          <div className="pl-4 py-1 grid grid-cols-3 gap-1">
+                                            {side.images.map((img, iIdx) => (
+                                              <button
+                                                key={iIdx}
+                                                onClick={() => {
+                                                  const sideThumbnails = side.images.map((i) => ({
+                                                    url: i.url,
+                                                    publicId: i.publicId,
+                                                    side: side.name,
+                                                  }));
+
+                                                  onSelectImage({
+                                                    url: img.url,
+                                                    publicId: img.publicId,
+                                                    turbine: turb.name,
+                                                    blade: blade.name,
+                                                    side: side.name,
+                                                    thumbnails: sideThumbnails,
+                                                    annotations: [],
+                                                    clientName: inspection.clientName,
+                                                    isReportView: false,
+                                                  });
+                                                }}
+                                                className="relative aspect-square rounded overflow-hidden border border-gray-700 hover:border-blue-400 transition-colors"
+                                              >
+                                                <img
+                                                  src={getOptimizedImageUrl(img.url, img.publicId, 100, 100)}
+                                                  alt={`${side.name} ${iIdx + 1}`}
+                                                  className="w-full h-full object-cover"
+                                                  loading="lazy"
+                                                />
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -380,39 +377,68 @@ const InspectionSidebar: React.FC<InspectionSidebarProps> = ({
                               <FaChevronRight size={10} /> {bladeName}
                             </div>
                             <div className="pl-4 py-1 space-y-1">
-                              {Object.entries(sides).map(([sideName, damages]) => (
-                                <div key={sideName} className="pl-4 border-l border-gray-600 ml-2">
-                                  <div className="p-2 text-xs font-medium text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                                    <FaImage size={10} /> {sideName}
-                                  </div>
-                                  {damages.map((damage, idx) => (
+                              {Object.entries(sides).map(([sideName, damages]) => {
+                                const sideId = `${report._id}-${turbineName}-${bladeName}-${sideName}`;
+                                const firstDamage = damages[0];
+                                if (!firstDamage) return null;
+
+                                return (
+                                  <div key={sideName}>
                                     <button
-                                      key={idx}
-                                      onClick={() => onSelectImage({
-                                        url: damage.imageUrl,
-                                        publicId: damage.imagePublicId,
-                                        turbine: damage.turbine,
-                                        blade: damage.blade,
-                                        side: damage.side,
-                                        thumbnails: [],
-                                        annotations: damage.annotations,
-                                        isReportView: true,
-                                        report: report,
-                                      })}
-                                      className="w-full flex items-start gap-3 p-2 hover:bg-gray-700 rounded transition-colors"
+                                      onClick={() => toggleExpand(sideId, setExpandedReports)}
+                                      className="w-full flex items-center gap-3 p-2 hover:bg-gray-700 rounded transition-colors group"
                                     >
-                                      <div className="w-12 h-12 rounded overflow-hidden bg-black flex-shrink-0 border border-gray-600">
-                                        <img src={damage.imageUrl} alt="Damage" className="w-full h-full object-cover" />
+                                      <div className="relative w-8 h-8 rounded overflow-hidden bg-gray-700 flex items-center justify-center flex-shrink-0 border border-gray-600 group-hover:border-blue-400 transition-colors">
+                                        <FaFolder size={16} className="text-yellow-500" />
                                       </div>
-                                      <div className="text-left">
-                                        <div className="text-xs font-bold text-gray-300">{damage.turbine} - {damage.blade}</div>
-                                        <div className="text-xs text-gray-500">Side: {damage.side}</div>
-                                        <div className="text-[10px] text-blue-400 mt-1">{damage.annotations?.length || 0} Annotations</div>
+                                      <div className="flex flex-col items-start">
+                                        <span className="text-sm font-medium text-gray-300 group-hover:text-white">{sideName}</span>
+                                        <span className="text-[10px] text-gray-500">{damages.length} issues</span>
+                                      </div>
+                                      <div className="ml-auto text-gray-500">
+                                        {expandedReports[sideId] ? <FaChevronDown size={10} /> : <FaChevronRight size={10} />}
                                       </div>
                                     </button>
-                                  ))}
-                                </div>
-                              ))}
+
+                                    {expandedReports[sideId] && (
+                                      <div className="pl-4 py-1 grid grid-cols-3 gap-1">
+                                        {damages.map((damage, idx) => (
+                                          <button
+                                            key={idx}
+                                            onClick={() => {
+                                              const sideThumbnails = damages.map(d => ({
+                                                url: d.imageUrl,
+                                                publicId: d.imagePublicId,
+                                                side: d.side,
+                                              }));
+                                              
+                                              onSelectImage({
+                                                url: damage.imageUrl,
+                                                publicId: damage.imagePublicId,
+                                                turbine: damage.turbine,
+                                                blade: damage.blade,
+                                                side: damage.side,
+                                                thumbnails: sideThumbnails,
+                                                annotations: damage.annotations,
+                                                isReportView: true,
+                                                report: report,
+                                              });
+                                            }}
+                                            className="relative aspect-square rounded overflow-hidden border border-gray-700 hover:border-blue-400 transition-colors"
+                                          >
+                                            <img 
+                                              src={getOptimizedImageUrl(damage.imageUrl, damage.imagePublicId, 100, 100)} 
+                                              alt={`${sideName} ${idx + 1}`} 
+                                              className="w-full h-full object-cover" 
+                                              loading="lazy"
+                                            />
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))}
